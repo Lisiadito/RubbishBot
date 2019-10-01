@@ -12,6 +12,7 @@ dayjs.locale(locale)
 
 let data = ical.parseFile('muellkalender.ics')
 let chatID
+let job
 
 function sendRubbishMessage() {
 	data = Object.values(data).filter(date => dayjs(date.start).diff(dayjs(), 'hour') >= 0)
@@ -28,8 +29,10 @@ function sendRubbishMessage() {
 
 bot.onText(/\/start/, msg => {
     chatID = msg.chat.id;
-	bot.sendMessage(chatID, `Bot neustarten. Der Bot checkt jeden Morgen um 7:00 und Abends um 19:00 ob Müll rausgebracht werden muss.`)
-	schedule.scheduleJob('0 7,19 * * *', sendRubbishMessage)	
+	bot.sendMessage(chatID, `Bot wird neugestartet. Der Bot checkt jeden Morgen um 7:00 und Abends um 19:00 ob Müll rausgebracht werden muss.`)	
+	if (!job) {
+		job = schedule.scheduleJob('rubbishjob', '0 7,19 * * *', sendRubbishMessage)	
+	}			
 })
 
 bot.onText(/\/active/, msg => {
