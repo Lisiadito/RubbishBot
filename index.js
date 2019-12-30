@@ -13,17 +13,36 @@ dayjs.locale(locale)
 let data = ical.parseFile('muellkalender.ics')
 let chatID
 let job
+const interval = 24
 
-function sendRubbishMessage() {
-	data = Object.values(data).filter(date => dayjs(date.start).diff(dayjs(), 'hour') >= 0)
+function sendRubbishMessage(customInterval) {
+    let messages
+    
+    if (Number.isInteger(customInterval)) {
+        messages = checkNext(customInterval)    
+    } else {
+        messages = checkNext(interval)
+    }
+
+    if (chatID && messages.length) {
+        messages.forEach(message => bot.sendMessage(chatID, message))
+    } else if (!chatID){
+        console.error('chatID not set')
+    }
+}
+
+function checkNext(hours) {
+    data = Object.values(data).filter(date => dayjs(date.start).diff(dayjs(), 'hour') >= 0)
+    const messages = []
 	if (data.length <= 0) {
-	  	bot.sendMessage(chatID, `Kalendar enthält keine aktuellen Daten mehr. Downloaden den aktuellen.`)	
+	    return 'Kalendar enthält keine aktuellen Daten mehr. Downloade den aktuellen.'
 	} else {
 		data.forEach(date => {
-			if (dayjs(date.start).diff(dayjs(), 'hour') <= 24) {
-		  		bot.sendMessage(chatID, `Müll rausbringen. ${date.summary.match(/- (.*)/)[1]} wird am ${dayjs(date.start).format('dddd DD.MM.YYYY')} abgeholt.`)
+			if (dayjs(date.start).diff(dayjs(), 'hour') <= hours) {
+		  		messages.push(`Müll rausbringen. ${date.summary.match(/- (.*)/)[1]} wird am ${dayjs(date.start).format('dddd DD.MM.YYYY')} abgeholt.`)
 			}
 		})
+		return messages
 	}
 }
 
@@ -37,6 +56,11 @@ bot.onText(/\/start/, msg => {
 
 bot.onText(/\/active/, msg => {
 	msg.chat.id === chatID ? bot.sendMessage(chatID, 'Bot läuft in diesem Channel') : bot.sendMessage(msg.chat.id, 'Bot läuft in einem anderen Channel. Um hier zu verwenden /start tippen.') 
+})
+
+bot.onText(/\/test/, msg => {
+    // debugging function to check for the next 30 days
+    sendRubbishMessage(720) 
 })
 
 
