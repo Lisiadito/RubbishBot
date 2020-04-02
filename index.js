@@ -7,10 +7,11 @@ const ical = require('node-ical')
 const dayjs = require('dayjs')
 const locale = require('dayjs/locale/de')
 const schedule = require('node-schedule')
+const fs = require('fs')
 
 dayjs.locale(locale)
 
-let data = ical.parseFile('muellkalender.ics')
+let data = ical.sync.parseFile('muellkalender.ics')
 let chatID
 let job
 const interval = 24
@@ -46,12 +47,36 @@ function checkNext(hours) {
 	}
 }
 
+function writeChatID(id) {
+    try {
+        fs.writeFileSync('chatid.txt', id)
+    } catch (e){
+        console.error(e)
+    }
+}
+
+function readChatID() {
+    try {
+        return fs.readFileSync('chatid.txt', {encoding: 'utf8'})
+    } catch (e) {
+        console.error(e, 'Please provide a chatid.txt file or restart the bot via the /start command')
+    }
+}
+
+function start() {
+    if (!chatID) {
+        chatID = readChatID()
+    }
+    if (!job && chatID) {
+		job = schedule.scheduleJob('rubbishjob', '0 7,19 * * *', sendRubbishMessage)	
+	} 
+}
+
 bot.onText(/\/start/, msg => {
     chatID = msg.chat.id;
+    writeChatID(chatID)
 	bot.sendMessage(chatID, `Bot wird neugestartet. Der Bot checkt jeden Morgen um 7:00 und Abends um 19:00 ob Müll rausgebracht werden muss.`)	
-	if (!job) {
-		job = schedule.scheduleJob('rubbishjob', '0 7,19 * * *', sendRubbishMessage)	
-	}			
+	start()
 })
 
 bot.onText(/\/active/, msg => {
@@ -63,6 +88,4 @@ bot.onText(/\/test/, msg => {
     sendRubbishMessage(720) 
 })
 
-
-
-
+start()
