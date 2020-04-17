@@ -72,18 +72,18 @@ function start() {
 	} 
 }
 
-bot.onText(/\/start/, msg => {
+bot.onText(/\/rubbish_start/, msg => {
     chatID = msg.chat.id;
     writeChatID(chatID)
 	bot.sendMessage(chatID, `Bot wird neugestartet. Der Bot checkt jeden Morgen um 7:00 und Abends um 19:00 ob Müll rausgebracht werden muss.`)	
 	start()
 })
 
-bot.onText(/\/active/, msg => {
+bot.onText(/\/rubbish_active/, msg => {
 	msg.chat.id === chatID ? bot.sendMessage(chatID, 'Bot läuft in diesem Channel') : bot.sendMessage(msg.chat.id, 'Bot läuft in einem anderen Channel. Um hier zu verwenden /start tippen.') 
 })
 
-bot.onText(/\/test/, msg => {
+bot.onText(/\/rubbish_test/, msg => {
     // debugging function to check for the next 30 days
     sendRubbishMessage(720) 
 })
